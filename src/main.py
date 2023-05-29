@@ -45,13 +45,20 @@ class Cell:
         return self._type == CRYSTAL
 
 
+class PathNode:
+    def __init__(self, id: int, i_next: int, i_sources: list[int]):
+        self.id = id
+        self.i_next = i_next
+        self.i_sources = i_sources
+
+
 class Field:
     def __init__(self, cells: list[Cell], my_base_index: int, opp_base_index: int):
         self.cells = cells
         self.my_base_index = my_base_index
         self.opp_base_index = opp_base_index
 
-        self.distances = [self._build_distances_from(i) for i in range(self.size)]
+        self.distances = {i: self.build_distances_from((i,)) for i in range(self.size)}
         self.total_my_ants = 0
         self.total_opp_ants = 0
 
@@ -71,11 +78,12 @@ class Field:
         total_resources = sum(c.resources for c in self.cells)
         return total_resources // total_ants
 
-    def _build_distances_from(self, base_index: int) -> list[int]:
-        """A simple BFS should work."""
+    def build_distances_from(self, from_indexes: tuple[int]) -> list[int]:
+        """Also a BFS, but starting from a set"""
         distances = [INFINITE_DISTANCE for _ in range(self.size)]
-        distances[base_index] = 0
-        queue = [base_index]
+        for i in from_indexes:
+            distances[i] = 0
+        queue = [i for i in from_indexes]
         i = 0
         while i < len(queue):
             i_curr = queue[i]
@@ -104,6 +112,23 @@ class Field:
             cell.opp_ants = opp_ants
             self.total_my_ants += my_ants
             self.total_opp_ants += opp_ants
+
+    def build_path(self, i_sources: tuple[int], i_target: int, i_other_targets: list[int]) -> list[PathNode]:
+        if i_sources not in self.distances:
+            self.distances[i_sources] = self.build_distances_from(i_sources)
+        dists = self.distances[i_sources]
+
+        curr_distance = dists[i_target]
+        i_curr_cell = i_target
+        path = [PathNode(id=i_target, i_next=-1, i_sources=[i_target])]
+        while curr_distance > 0:
+            i_next_cells = [n for n in self.cells[i_curr_cell].neighbors if
+                            n != -1 and dists[n] < curr_distance]
+            i_curr_cell = find_best_next_cell(self, i_next_cells, i_other_targets)
+            path[-1].i_next = i_curr_cell
+            path.append(PathNode(id=i_curr_cell, i_next=-1, i_sources=[i_target]))
+            curr_distance -= 1
+        return path
 
 
 def read_initial() -> Field:
@@ -193,6 +218,12 @@ def evaluate_target(field: Field, i_cell: int) -> tuple[int, float]:
     return -7, 0  # lower priority for any other case
 
 
+def find_best_next_cell(field: Field, i_next_cells: list[int], i_targets: list[int]):
+    if not i_targets:
+        return i_next_cells[0]
+    return min(i_next_cells, key=lambda i_cell: min(field.distances[i_cell][i_target] for i_target in i_targets))
+
+
 if __name__ == "__main__":
     field = read_initial()
     distances_from_my_base = field.distances[field.my_base_index]
@@ -242,7 +273,8 @@ if __name__ == "__main__":
                     raw_targets.append((score, i))
         targets = []
         total_dist = 0
-        for score, i_cell in sorted(raw_targets, reverse=True):
+        sorted_raw_targets = sorted(raw_targets, reverse=True)
+        for score, i_cell in sorted_raw_targets:
             distance_to_target = field.distances[i_cell][field.my_base_index]
             if total_dist + distance_to_target <= field.total_my_ants:
                 targets.append((i_cell, 100))
@@ -257,7 +289,20 @@ if __name__ == "__main__":
 
         debug(f"{targets =}")
         if targets:
-            actions = ';'.join(f"LINE {field.my_base_index} {i} {resources}" for i, resources in targets)
+            path = {field.my_base_index: PathNode(field.my_base_index, i_next=-1, i_sources=[])}
+            path_indexes = (field.my_base_index, )
+            for _, i_target in sorted_raw_targets:
+                i_other_targets = [it for _, it in sorted_raw_targets[1:]]
+                path_segment = field.build_path(path_indexes, i_target, i_other_targets)
+                for node in path_segment[:-1]:
+                    if node.id in path_indexes:
+                        raise ValueError(f"Found node {node.id} that is already on the path {path_indexes}")
+                    path[node.id] = node
+                i_next = path_segment[-1].id  # should be one of the targets
+                while i_next != -1:
+                    path[i_next].i_sources.append(i_target)
+                    i_next = path[i_next].i_next
+            actions = ";".join(f"BEACON {node.id} {100}" for node in path.values())
         else:
             actions = "WAIT"
         print(actions)

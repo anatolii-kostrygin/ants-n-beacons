@@ -20,3 +20,25 @@ What to do:
 
 seed=-65787506613868570 (against SallySock)
 messy stuff
+
+
+seed=2561355143491217000 (against Z3R00N3_M)
+A lot of eggs. Not taking eggs at the end looks bad
+
+
+
+
+Winning with navigation (against Boss 2)
+seed=2561355143491217000
+seed=-6578750661386857
+seed=7243548016882906000
+seed=7187188554647826000
+seed=-4611521721736449500
+seed=-610002291022685800
+
+Loosing with navigation (against Boss 2)
+
+seed=-3226224768081418000
+seed=-6938352367199917000
+seed=2806404505992879000 (very unbalanced map - too few eggs, too many crystals)
+seed=5925238082578644000 (need distance management - easy)
