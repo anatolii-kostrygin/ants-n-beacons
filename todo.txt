@@ -1,0 +1,2 @@
+TWO distant bases:
+seed=-3226224768081418000
