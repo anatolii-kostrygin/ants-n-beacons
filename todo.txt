@@ -1,5 +1,5 @@
 TWO distant bases:
-seed=-3226224768081418000
+seed=-3226224768081418000 (against PythonSlayer)
 
 
 
@@ -9,3 +9,14 @@ Target priorities:
 3) Other eggs
 3) Far crystals
 4) Close crystals
+
+--------------------
+This stabilizes on ~100th place in Wood 1.
+
+What to do:
+1) chain "thickness" management
+2) precise navigation without using lines
+--------------------
+
+seed=-65787506613868570 (against SallySock)
+messy stuff

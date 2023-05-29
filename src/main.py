@@ -59,6 +59,14 @@ class Field:
     def size(self) -> int:
         return len(self.cells)
 
+    @property
+    def total_crystals(self) -> int:
+        return sum(c.resources for c in self.cells if c.is_crystal())
+
+    @property
+    def total_ants(self) -> int:
+        return self.total_my_ants + self.total_opp_ants
+
     def compute_expected_length(self, total_ants: int) -> int:
         total_resources = sum(c.resources for c in self.cells)
         return total_resources // total_ants
@@ -169,6 +177,9 @@ def evaluate_target(field: Field, i_cell: int) -> tuple[int, float]:
     my_dist = field.distances[i_cell][field.my_base_index]
     dist_ratio = my_dist / field.distances[i_cell][field.opp_base_index]
 
+    if cell.is_egg() and field.total_ants >= field.total_crystals:
+        return -7, 0
+
     if cell.is_egg() and dist_ratio <= 0.66:
         return -1, -my_dist
     if cell.is_crystal() and 0.34 <= dist_ratio <= 1:
@@ -227,7 +238,8 @@ if __name__ == "__main__":
         for i, cell in enumerate(field.cells):
             if cell.resources > 0:
                 score = evaluate_target(field, i)
-                raw_targets.append((score, i))
+                if score[0] != -7:
+                    raw_targets.append((score, i))
         targets = []
         total_dist = 0
         for score, i_cell in sorted(raw_targets, reverse=True):
