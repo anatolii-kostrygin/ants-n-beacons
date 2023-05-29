@@ -2,17 +2,14 @@ from pathlib import Path
 
 from .main import read_initial, echo_input
 from .reader import reader
+from time import time
 
 
-reader.reset(Path("..") / "tests" / "initial_input.txt")
+def test_read_initial_field():
+    reader.reset(Path("..") / "tests" / "initial_input.txt")
+    t0 = time()
+    field = read_initial()
+    print(f"Done in {time() - t0:.3f} seconds")
 
-
-def test():
-    print([x for x in Path(".").iterdir() if x.is_dir()])
-    # with open(Path("..") / "tests" / "initial_input.txt", "r") as file:
-    #     echo_input = file.readline
-    #     print(echo_input())
-    f = read_initial()
-    # print(input())
-    # print(input())
-    assert 42 != 37
+    for i in range(field.size):
+        assert field.distances[i][i] == 0
