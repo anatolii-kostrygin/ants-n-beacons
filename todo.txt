@@ -1,2 +1,11 @@
 TWO distant bases:
 seed=-3226224768081418000
+
+
+
+Target priorities:
+1) Close eggs
+2) Mid-dist crystals
+3) Other eggs
+3) Far crystals
+4) Close crystals
